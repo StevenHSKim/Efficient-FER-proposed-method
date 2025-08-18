@@ -45,7 +45,7 @@ eps = sys.float_info.epsilon
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--raf_path', type=str, default='/userHome/userhome1/kimhaesung/FER_Models/datasets/raf-basic', help='Raf-DB dataset path.')
+    parser.add_argument('--raf_path', type=str, default='./datasets/raf-basic', help='Raf-DB dataset path.')
     parser.add_argument('--gpu', type=str, default='0', help='Assign a single GPU by its number.')
     parser.add_argument('--workers', default=4, type=int, help='Number of data loading workers.')
     
@@ -107,7 +107,7 @@ def create_experiment_folder(args, custom_stage_repeats):
         exp_name = f"BetterShuffleNet_{args.model_size}{stage_str}{residual_str}_{args.optimizer}_lr{args.lr}_bs{args.batch_size}_{timestamp}"
 
     # 기본 실험 디렉토리
-    base_exp_dir = '/userHome/userhome1/kimhaesung/FER_Models/FER_Models/ShuffleNet/experiments'
+    base_exp_dir = './proposed_model/experiment_results'
     experiment_dir = os.path.join(base_exp_dir, exp_name)
     
     # 하위 디렉토리들 생성
