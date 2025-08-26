@@ -1,5 +1,6 @@
 # Efficient-FER-proposed-method
-
+- CSDNet (Channel-wise Split Dilated) Net: 셔플넷 기반 모델 구조의 성능 한계를 느껴 새로 고안 중인 모델
+- ShuffleNet: 기존 셔플넷 기반 모델
 
 ## 데이터셋
 | **데이터셋 이름** | **이미지 개수** | **공식 홈페이지** | **취득 방법** | **데이터셋 다운로드 링크** |
