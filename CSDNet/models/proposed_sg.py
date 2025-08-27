@@ -22,12 +22,12 @@ class SELayer(nn.Module):
         y = self.fc(y)
         return x * y
 
-class SpatialGlance(nn.Module):
+class GatedSpatialAttention(nn.Module):
     """
     이미지 전역 정보를 활용하는 공간 어텐션 모듈
     """
     def __init__(self, in_channels, reduction=8):
-        super(SpatialGlance, self).__init__()
+        super(GatedSpatialAttention, self).__init__()
         intermediate_channels = in_channels // reduction
 
         # 전역 문맥을 추출하여 조절 벡터를 생성하는 모듈
@@ -172,8 +172,7 @@ class RapidNet_Backbone(torch.nn.Module):
             self.stages.append(nn.Sequential(*stage_blocks))
             in_channels = out_channels
         
-        # 여기서 새로운 SpatialGlance를 사용하도록 변경
-        self.spatial_glance = SpatialGlance(channels[1])
+        self.spatial_glance = GatedSpatialAttention(channels[1])
 
         self.conv_last = nn.Sequential(nn.Conv2d(channels[-1], emb_dims, 1, bias=True), nn.BatchNorm2d(emb_dims), hard_swish())
         self.model_init()
@@ -188,12 +187,12 @@ class RapidNet_Backbone(torch.nn.Module):
         x = self.stem(inputs)
         x = self.stages[0](x)
         x = self.stages[1](x)
-        # Stage 2 직후 개선된 어텐션 모듈 적용
+        # Stage 2 직후 GatedSpatialAttention 적용
         x = self.spatial_glance(x)
         x = self.stages[2](x)
         return self.conv_last(x)
 
-# (ChannelAttention, ProposedFERNet, ProposedNet 팩토리 함수 - 이전과 동일)
+# ChannelAttention, ProposedFERNet, ProposedNet 팩토리 함수
 class ChannelAttention(nn.Module):
     def __init__(self, input_channels, reduction=16):
         super().__init__()
@@ -218,7 +217,6 @@ class ProposedFERNet(nn.Module):
         return logits
     
 def ProposedNet(num_classes=7, **kwargs):
-    # blocks의 Stage 2 (두 번째 리스트) local_stages 값을 4에서 2로 줄여서 실험
     return ProposedFERNet(blocks=[[3,0], [2,4], [2,2]], 
                           channels=[48, 96, 160], 
                           emb_dims=512, 
