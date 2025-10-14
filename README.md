@@ -1,5 +1,17 @@
 # ProposedNet
 
+## Run
+
+create the environment:
+```
+conda env create --file environment.yaml
+```
+
+Execute the following commands:
+```
+python main.py --dataset ckplus --data_path ../datasets
+```
+
 ## Folder Structure
 ```bash
 ./
