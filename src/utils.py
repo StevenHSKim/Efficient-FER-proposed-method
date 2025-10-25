@@ -3,7 +3,7 @@ import os
 import time
 import random
 import numpy as np
-from datetime import datetime
+from datetime import datetime # Req #3
 try:
     from thop import profile
     THOP_AVAILABLE = True
@@ -22,10 +22,11 @@ def control_random_seed(seed):
     
 def create_experiment_folder(args):
     timestamp = datetime.now().strftime("%y%m%d_%H%M%S")
+    
     if args.exp_name:
         exp_name = f"{args.exp_name}_{timestamp}"
     else:
-        exp_name = f"{args.model}_{args.dataset}_{args.optimizer}_lr{args.lr}_bs{args.batch_size}_{timestamp}"
+        exp_name = f"{args.models}_{args.datasets}_{timestamp}"
     
     base_exp_dir = './experiments'
     experiment_dir = os.path.join(base_exp_dir, exp_name)
@@ -39,8 +40,13 @@ def measure_model_complexity(model, input_size=(3, 112, 112)):
     params = sum(p.numel() for p in model.parameters() if p.requires_grad)
     flops = 0
     if THOP_AVAILABLE:
-        dummy_input = torch.randn(1, *input_size).to(next(model.parameters()).device)
-        flops, _ = profile(model, inputs=(dummy_input,), verbose=False)
+        try:
+            dummy_input = torch.randn(1, *input_size).to(next(model.parameters()).device)
+            flops, _ = profile(model, inputs=(dummy_input,), verbose=False)
+        except Exception as e:
+            print(f"Warning: FLOPs calculation failed. {e}")
+            flops = 0
+            
     return {"params_M": params / 1_000_000, "flops_G": flops / 1_000_000_000 if THOP_AVAILABLE else -1}
 
 def measure_inference_speed(model, input_size=(3, 112, 112)):
@@ -51,37 +57,43 @@ def measure_inference_speed(model, input_size=(3, 112, 112)):
         dummy_input_gpu = torch.randn(1, *input_size, device=device)
         starter, ender = torch.cuda.Event(enable_timing=True), torch.cuda.Event(enable_timing=True)
         repetitions=100; timings_gpu = np.zeros((repetitions,))
-        for _ in range(10): _=model(dummy_input_gpu)
+        for _ in range(10): _=model(dummy_input_gpu) # Warm-up
         with torch.no_grad():
             for rep in range(repetitions):
                 starter.record(); _ = model(dummy_input_gpu); ender.record()
                 torch.cuda.synchronize(); timings_gpu[rep] = starter.elapsed_time(ender)
         avg_latency_gpu = np.sum(timings_gpu) / repetitions
     
-    cpu_model = model.to('cpu'); dummy_input_cpu = torch.randn(1, *input_size)
-    repetitions=100; timings_cpu = np.zeros((repetitions,))
-    for _ in range(10): _ = cpu_model(dummy_input_cpu)
-    with torch.no_grad():
-        for rep in range(repetitions):
-            start_time = time.time(); _ = cpu_model(dummy_input_cpu); end_time = time.time()
-            timings_cpu[rep] = (end_time - start_time) * 1000
-    avg_latency_cpu = np.sum(timings_cpu) / repetitions
-    model.to(device)
+    avg_latency_cpu = -1
+    try:
+        cpu_model = model.to('cpu'); dummy_input_cpu = torch.randn(1, *input_size)
+        repetitions=100; timings_cpu = np.zeros((repetitions,))
+        for _ in range(10): _ = cpu_model(dummy_input_cpu) # Warm-up
+        with torch.no_grad():
+            for rep in range(repetitions):
+                start_time = time.time(); _ = cpu_model(dummy_input_cpu); end_time = time.time()
+                timings_cpu[rep] = (end_time - start_time) * 1000 # ms
+        avg_latency_cpu = np.sum(timings_cpu) / repetitions
+        model.to(device) 
+    except Exception as e:
+        print(f"Warning: CPU latency measurement failed. {e}")
+        model.to(device) 
+        
     return {"latency_gpu_ms": avg_latency_gpu, "latency_cpu_ms": avg_latency_cpu}
         
-def measure_backbone_complexity(backbone_model, input_size=(3, 224, 224)):
-    # Calculate the number of parameters (only trainable parameters)
+def measure_backbone_complexity(backbone_model, input_size=(3, 112, 112)):
     params = sum(p.numel() for p in backbone_model.parameters() if p.requires_grad)
     
     flops = 0
     if THOP_AVAILABLE:
-        # Create a dummy input tensor on the same device as the model
-        device = next(backbone_model.parameters()).device
-        dummy_input = torch.randn(1, *input_size).to(device)
-
-        # Use thop.profile to calculate FLOPs
-        flops, _ = profile(backbone_model, inputs=(dummy_input,), verbose=False)
-    
+        try:
+            device = next(backbone_model.parameters()).device
+            dummy_input = torch.randn(1, *input_size).to(device)
+            flops, _ = profile(backbone_model, inputs=(dummy_input,), verbose=False)
+        except Exception as e:
+            print(f"Warning: Backbone FLOPs calculation failed. {e}")
+            flops = 0
+            
     return {
         "params_M": params / 1_000_000,
         "flops_G": flops / 1_000_000_000 if THOP_AVAILABLE else -1,
