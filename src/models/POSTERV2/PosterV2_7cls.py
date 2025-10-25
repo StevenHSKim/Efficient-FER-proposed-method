@@ -247,12 +247,12 @@ class pyramid_trans_expr2(nn.Module):
         self.window_size = window_size
         self.N = [win * win for win in window_size]
         self.face_landback = MobileFaceNet([112, 112], 136)
-        face_landback_checkpoint = torch.load('/userHome/userhome1/kimhaesung/FER_Models/FER_Models/POSTER/models/pretrain/mobilefacenet_model_best.pth.tar',
-                                              map_location=lambda storage, loc: storage)
-        self.face_landback.load_state_dict(face_landback_checkpoint['state_dict'])
+        # face_landback_checkpoint = torch.load('/userHome/userhome1/kimhaesung/FER_Models/FER_Models/POSTER/models/pretrain/mobilefacenet_model_best.pth.tar',
+        #                                       map_location=lambda storage, loc: storage)
+        # self.face_landback.load_state_dict(face_landback_checkpoint['state_dict'])
 
-        for param in self.face_landback.parameters():
-            param.requires_grad = False
+        # for param in self.face_landback.parameters():
+        #     param.requires_grad = False
 
         self.VIT = VisionTransformer(depth=2, embed_dim=embed_dim)
 

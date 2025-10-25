@@ -49,7 +49,7 @@ def get_model_strategy(model_name, args, device, num_classes):
         criterion = torch.nn.CrossEntropyLoss()
         return ProposedNetStrategy(criterion)
     
-    elif model_name == 'PosterV2':
+    elif model_name == 'POSTER':
         criterion = torch.nn.CrossEntropyLoss()
         return PosterV2Strategy(criterion)
     
