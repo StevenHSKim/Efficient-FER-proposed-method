@@ -1,5 +1,24 @@
 # ProposedNet
 
+## Run
+
+1. modify the `name` and `prefix` in the environment.yaml
+```
+name: environment_name (ex: Efficient-FER)
+...
+prefix: your env dirs (ex: /userHome/userhome1/kimhaesung/miniconda3/envs/DAN)
+```
+
+2. create the environment:
+```
+conda env create --file environment.yaml
+```
+
+3. Execute the following commands:
+```
+python main.py --dataset ckplus --data_path ../datasets
+```
+
 ## Folder Structure
 ```bash
 ./
