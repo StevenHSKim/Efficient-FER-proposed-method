@@ -1,0 +1,30 @@
+services:
+  pytorch-env:
+    build: .
+    container_name: cse_gresnet_env 
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+    volumes:
+      # 현재 디렉토리(CSE-GResNet)를 컨테이너의 /workspace에 마운트
+      - .:/workspace
+      
+      # datasets 폴더가 현재 폴더(.)의 상위 폴더(../)에 있다고 가정
+      - ../datasets:/workspace/datasets 
+
+    working_dir: /workspace
+    stdin_open: true
+    tty: true
+    shm_size: '8gb'
+
+    # 포트 포워딩
+    ports:
+      - "8888:8888"
+      - "6006:6006"
