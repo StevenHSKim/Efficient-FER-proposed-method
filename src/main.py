@@ -251,7 +251,7 @@ def test_unified(test_loader, model, checkpoint_path, device, strategy):
     """
     try:
         # 1. 체크포인트 로드
-        loaded_data = torch.load(checkpoint_path, map_location=device)
+        loaded_data = torch.load(checkpoint_path, map_location=device, weights_only=False)
         print(f"Loaded checkpoint type: {type(loaded_data)}") 
 
         state_dict = None

@@ -1,8 +1,10 @@
+import sys
 import torch
 import torch.nn.functional as F
 import math
 from src.models.base.model_strategy import ModelStrategy
 from src.models.AdaDF.adadf_utils import generate_adaptive_LD
+eps = sys.float_info.epsilon
 
 class AdaDFStrategy(ModelStrategy):
     """Ada-DF용 (LD 업데이트 필요)"""
